@@ -45,6 +45,24 @@ def add():
     return render_template('add.html')
 
 
+@app.route('/delete/<int:post_id>')
+def delete(post_id):
+    file_path = os.path.join(app.root_path, 'data', 'blog_posts.json')
+
+    # Load current posts
+    with open(file_path, 'r') as f:
+        blog_posts = json.load(f)
+
+    # Filter out the post with the given ID
+    blog_posts = [post for post in blog_posts if post['id'] != post_id]
+
+    # Save the updated list
+    with open(file_path, 'w') as f:
+        json.dump(blog_posts, f, indent=4)
+
+    return redirect(url_for('index'))
+
+
 @app.route('/')
 def index():
     # Construct the path to the JSON file in the 'data' folder
