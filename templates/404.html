@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Page Not Found</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body { text-align: center; padding: 50px; }
+        h1 { font-size: 3em; color: #c00; }
+        a { color: #007BFF; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>404 - Page Not Found</h1>
+    <p>Sorry, the blog post or page you are looking for does not exist.</p>
+    <p><a href="{{ url_for('index') }}">Return to Home</a></p>
+</body>
+</html>

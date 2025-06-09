@@ -1,74 +1,86 @@
 import json
 import os
-from flask import Flask, request, redirect, url_for, render_template
+from flask import Flask, request, redirect, url_for, abort, render_template
 
 app = Flask(__name__)
+
+
+def get_blog_file_path():
+    return os.path.join(app.root_path, 'data', 'blog_posts.json')
+
+
+def read_posts():
+    file_path = get_blog_file_path()
+    with open(file_path, 'r') as f:
+        return json.load(f)
+
+
+def write_posts(posts):
+    file_path = get_blog_file_path()
+    with open(file_path, 'w') as f:
+        json.dump(posts, f, indent=4)
 
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
     if request.method == 'POST':
-        author = request.form.get('author')
-        title = request.form.get('title')
-        content = request.form.get('content')
+        blog_posts = read_posts()
 
-        # Path to the JSON file
-        file_path = os.path.join(app.root_path, 'data', 'blog_posts.json')
-
-        # Load existing posts
-        with open(file_path, 'r') as f:
-            blog_posts = json.load(f)
-
-        # Generate a unique ID: find the max current ID and add 1
-        if blog_posts:
-            new_id = max(post['id'] for post in blog_posts) + 1
-        else:
-            new_id = 1
-
-        # Create new post dictionary
+        new_id = max((post['id'] for post in blog_posts), default=0) + 1
         new_post = {
             'id': new_id,
-            'author': author,
-            'title': title,
-            'content': content
+            'author': request.form.get('author'),
+            'title': request.form.get('title'),
+            'content': request.form.get('content')
         }
 
-        # Append the new post and save back to JSON file
         blog_posts.append(new_post)
-        with open(file_path, 'w') as f:
-            json.dump(blog_posts, f, indent=4)
+        write_posts(blog_posts)
 
-        # Redirect to the index page
         return redirect(url_for('index'))
 
-    # GET request renders the form
     return render_template('add.html')
 
 
 @app.route('/delete/<int:post_id>')
 def delete(post_id):
-    file_path = os.path.join(app.root_path, 'data', 'blog_posts.json')
+    blog_posts = read_posts()
+    original_count = len(blog_posts)
 
-    # Load current posts
-    with open(file_path, 'r') as f:
-        blog_posts = json.load(f)
-
-    # Filter out the post with the given ID
     blog_posts = [post for post in blog_posts if post['id'] != post_id]
 
-    # Save the updated list
-    with open(file_path, 'w') as f:
-        json.dump(blog_posts, f, indent=4)
+    if len(blog_posts) == original_count:
+        abort(404)
 
+    write_posts(blog_posts)
     return redirect(url_for('index'))
+
+
+@app.route('/update/<int:post_id>', methods=['GET', 'POST'])
+def update(post_id):
+    blog_posts = read_posts()
+    post = next((p for p in blog_posts if p['id'] == post_id), None)
+
+    if post is None:
+        abort(404)
+
+    if request.method == 'POST':
+        post['author'] = request.form.get('author')
+        post['title'] = request.form.get('title')
+        post['content'] = request.form.get('content')
+
+        write_posts(blog_posts)
+        return redirect(url_for('index'))
+
+    return render_template('update.html', post=post)
+
+
+@app.errorhandler(404)
+def not_found(e):
+    return render_template('404.html'), 404
 
 
 @app.route('/')
 def index():
-    # Construct the path to the JSON file in the 'data' folder
-    file_path = os.path.join(app.root_path, 'data', 'blog_posts.json')
-
-    with open(file_path, 'r') as fileobj:
-        blog_posts = json.load(fileobj)
-
+    blog_posts = read_posts()
     return render_template('index.html', posts=blog_posts)
