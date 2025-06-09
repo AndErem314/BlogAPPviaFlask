@@ -84,3 +84,7 @@ def not_found(e):
 def index():
     blog_posts = read_posts()
     return render_template('index.html', posts=blog_posts)
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=5000, debug=True)
