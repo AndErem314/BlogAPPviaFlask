@@ -6,16 +6,19 @@ app = Flask(__name__)
 
 
 def get_blog_file_path():
+    """Return the full path to the blog posts JSON file."""
     return os.path.join(app.root_path, 'data', 'blog_posts.json')
 
 
 def read_posts():
+    """Read blog posts from the JSON file."""
     file_path = get_blog_file_path()
     with open(file_path, 'r') as f:
         return json.load(f)
 
 
 def write_posts(posts):
+    """Write blog posts to the JSON file."""
     file_path = get_blog_file_path()
     with open(file_path, 'w') as f:
         json.dump(posts, f, indent=4)
@@ -23,6 +26,7 @@ def write_posts(posts):
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
+    """Handle the addition of a new blog post"""
     if request.method == 'POST':
         blog_posts = read_posts()
 
@@ -44,6 +48,7 @@ def add():
 
 @app.route('/delete/<int:post_id>')
 def delete(post_id):
+    """Delete a blog post by ID"""
     blog_posts = read_posts()
     original_count = len(blog_posts)
 
@@ -58,6 +63,7 @@ def delete(post_id):
 
 @app.route('/update/<int:post_id>', methods=['GET', 'POST'])
 def update(post_id):
+    """Update an existing blog post by ID"""
     blog_posts = read_posts()
     post = next((p for p in blog_posts if p['id'] == post_id), None)
 
@@ -77,11 +83,13 @@ def update(post_id):
 
 @app.errorhandler(404)
 def not_found(e):
+    """Render the 404 error page."""
     return render_template('404.html'), 404
 
 
 @app.route('/')
 def index():
+    """Render the index page with all blog posts."""
     blog_posts = read_posts()
     return render_template('index.html', posts=blog_posts)
 
