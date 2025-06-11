@@ -13,8 +13,11 @@ def get_blog_file_path():
 def read_posts():
     """Read blog posts from the JSON file."""
     file_path = get_blog_file_path()
-    with open(file_path, 'r') as f:
-        return json.load(f)
+    try:
+        with open(file_path, 'r') as f:
+            return json.load(f)
+    except PermissionError:
+        raise RuntimeError(f"Permission denied {file_path}")
 
 
 def write_posts(posts):
@@ -46,12 +49,11 @@ def add():
     return render_template('add.html')
 
 
-@app.route('/delete/<int:post_id>')
+@app.route('/delete/<int:post_id>', methods=['POST'])
 def delete(post_id):
     """Delete a blog post by ID"""
     blog_posts = read_posts()
     original_count = len(blog_posts)
-
     blog_posts = [post for post in blog_posts if post['id'] != post_id]
 
     if len(blog_posts) == original_count:
