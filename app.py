@@ -16,6 +16,13 @@ def read_posts():
     try:
         with open(file_path, 'r') as f:
             return json.load(f)
+
+    except FileNotFoundError:
+        return []
+
+    except json.JSONDecodeError:
+        return []
+
     except PermissionError:
         raise RuntimeError(f"Permission denied {file_path}")
 
@@ -84,7 +91,7 @@ def update(post_id):
 
 
 @app.errorhandler(404)
-def not_found(e):
+def not_found(_):
     """Render the 404 error page."""
     return render_template('404.html'), 404
 
